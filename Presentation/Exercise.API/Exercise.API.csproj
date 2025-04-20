@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\Core\Exercise.Application\Exercise.Application.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Exercise.Infrastructure\Exercise.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Exercise.Persistence\Exercise.Persistence.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Exercise.SignalR\Exercise.SignalR.csproj" />
   </ItemGroup>
 
 </Project>

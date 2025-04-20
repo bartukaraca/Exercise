@@ -19,5 +19,15 @@ namespace Exercise.Persistence
 				return configurationManager.GetConnectionString("PostgreSQL");
 			}
 		}
+		static public string ExternalConnectionString
+		{
+			get
+			{
+				ConfigurationManager configurationManager = new();
+				configurationManager.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../../Presentation/Exercise.API"));
+				configurationManager.AddJsonFile("appsettings.json");
+				return configurationManager.GetConnectionString("ExternalDatabase");
+			}
+		}
 	}
 }

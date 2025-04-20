@@ -9,6 +9,6 @@ namespace Exercise.Application.Features.Queries.RoadQueries.GetRoadById
 {
 	public class GetRoadByIdQueryRequest :IRequest<GetRoadByIdQueryResponse>
 	{
-        public string Id { get; set; }	
+        public int Id { get; set; }	
     }
 }

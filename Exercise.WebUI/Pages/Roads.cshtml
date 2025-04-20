@@ -1,0 +1,35 @@
+﻿@page
+@model Exercise.WebUI.Pages.RoadsModel
+
+@{
+    ViewData["Title"] = "Yol Listesi";
+}
+
+<h2>Yollar</h2>
+
+@if (Model.Roads.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+               
+                <th>Status</th> 
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var road in Model.Roads)
+            {
+                <tr>
+                    <td>@road.Id</td>
+                    
+                    <td>@road.RoadStatus?.Status</td> 
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Hiç yol bulunamadı.</p>
+}

@@ -21,18 +21,17 @@ namespace Exercise.Application.Features.Commands.CarCommands.CreateCar
         {
             await _carWriteRepository.AddAsync(new()
             {
-                EngineType = request.EngineType,
-                Color = request.Color,
-                Transmission = request.Transmission,
-                VehicleIdentitiyNumber = request.VehicleIdentitiyNumber,
-                CarBrandId = request.CarBrandId,
+              
+                RoadId= request.RoadId,
+                VehicleNumber=request.VehicleIdentitiyNumber,
+                
             });
             await _carWriteRepository.SaveAsync();
             return new CreateCarCommandResponse
             {
                 Success = true,
                 Message = "Araç Başarıyla Oluşturuldu."
-            };
+            };  
         }
     }
 }

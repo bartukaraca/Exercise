@@ -1,4 +1,6 @@
-﻿using Exercise.Application.Exceptions;
+﻿using Exercise.Application.Abstractions.Services;
+using Exercise.Application.DTOs.User;
+using Exercise.Application.Exceptions;
 using Exercise.Domain.Entities.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -14,36 +16,28 @@ namespace Exercise.Application.Features.Commands.AppUser.CreateUser
 {
 	public class CreateUserCommandHandler : IRequestHandler<CreateUserCommandRequest, CreateUserCommandResponse>
 	{
-		readonly UserManager<Domain.Entities.Identity.AppUser> _userManager;
+		readonly IUserService _userService;
 
-		public CreateUserCommandHandler(UserManager<Domain.Entities.Identity.AppUser> userManager)
+		public CreateUserCommandHandler(IUserService userService)
 		{
-			_userManager = userManager;
+			_userService = userService;
 		}
 
 		public async Task<CreateUserCommandResponse> Handle(CreateUserCommandRequest request, CancellationToken cancellationToken)
 		{
-			IdentityResult result = await _userManager.CreateAsync(new()
+	CreateUserResponse response =	await 	_userService.CreateAsync(new()
 			{
-				Id=Guid.NewGuid().ToString(),
-				UserName = request.UserName,
 				Email = request.Email,
 				NameSurname = request.NameSurname,
-			}, request.Password);
-
-			CreateUserCommandResponse response = new() { Succeeded = result.Succeeded };
-			if (result.Succeeded)
+				Password = request.Password,
+				PasswordConfirm = request.PasswordConfirm,
+				UserName= request.UserName,
+			});
+			return new()
 			{
-				response.Message = "Kullanıcı başarıyla oluşturuldu.";
-			}
-			else
-			{
-				foreach (var error in result.Errors)
-				{
-					response.Message += $"{error.Code} - {error.Description}<br>";
-				}
-			}
-			return response;
+				Message = response.Message,
+				Succeeded = response.Succeeded,
+			};
 		}
 	}
 }

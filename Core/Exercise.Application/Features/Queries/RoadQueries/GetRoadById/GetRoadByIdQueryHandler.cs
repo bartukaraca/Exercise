@@ -3,6 +3,7 @@ using Exercise.Domain.Entities;
 using MediatR;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace Exercise.Application.Features.Queries.RoadQueries.GetRoadById
 
 		public async Task<GetRoadByIdQueryResponse> Handle(GetRoadByIdQueryRequest request, CancellationToken cancellationToken)
 		{
-			Road road = await _roadReadRepository.GetByIdAsync(request.Id,false);
+			Road road = await _roadReadRepository.GetByIdWithStatusAsync(request.Id);
 			return new()
 			{
 				Message = "Yol Başarıyla Getirildi",

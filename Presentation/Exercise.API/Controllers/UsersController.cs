@@ -1,5 +1,8 @@
 ﻿using Exercise.Application.Features.Commands.AppUser.CreateUser;
 using Exercise.Application.Features.Commands.AppUser.LoginUser;
+using Exercise.Application.Features.Queries.CustomerQueries;
+using Exercise.Domain.Entities;
+using Exercise.Persistence.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -24,11 +27,14 @@ namespace Exercise.API.Controllers
 			CreateUserCommandResponse response = await _mediator.Send(createUserCommandRequest);
 			return Ok(response);
 		}
-		[HttpPost("[Action]")]
-		public async Task<IActionResult> Login(LoginUserCommandRequest loginUserCommandRequest)
+		[HttpGet]
+		public async Task<IActionResult> GetCustomer([FromQuery]GetAllCustomerQueryRequest getAllCustomerQueryRequest)
 		{
-			LoginUserCommandResponse response = await _mediator.Send(loginUserCommandRequest);
+		GetAllCustomerQueryResponse response =await _mediator.Send(getAllCustomerQueryRequest);
 			return Ok(response);
 		}
+		}
 	}
-}
+
+
+

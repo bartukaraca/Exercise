@@ -3,6 +3,7 @@ using Exercise.Application.Repositories.CarRepositories;
 using Exercise.Domain.Entities;
 using MediatR;
 using MediatR.Pipeline;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace Exercise.Application.Features.Queries.CarQueries.GetAllCar
 
         public async Task<GetAllCarQueryResponse> Handle(GetAllCarQueryRequest request, CancellationToken cancellationToken)
         {
-            var cars = _carReadRepository.GetAll().ToList();
+            var cars = _carReadRepository.GetAll().Include(r=>r.Road).ToList();
             return new()
             {
                 Message = "Basarili",

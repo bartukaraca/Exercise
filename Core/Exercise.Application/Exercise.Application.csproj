@@ -16,8 +16,4 @@
     <ProjectReference Include="..\Exercise.Domain\Exercise.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\Commands\CarBrandCommands\UpdateCarBrand\" />
-  </ItemGroup>
-
 </Project>

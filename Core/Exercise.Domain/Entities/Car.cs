@@ -1,6 +1,7 @@
 ﻿using Exercise.Domain.Entities.Common;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,13 +9,13 @@ using System.Threading.Tasks;
 namespace Exercise.Domain.Entities
 {
 	public class Car : BaseEntitiy
-	{       
-        public Guid CarBrandId { get; set; }
-        public string Color { get; set; }
-        public string VehicleIdentitiyNumber { get; set; }
-        public string EngineType { get; set; }
-        public string Transmission { get; set; }    
+	{
+		public string VehicleNumber { get; set; }
+		public int RoadId { get; set; }
 
+
+		[ForeignKey(nameof(RoadId))]
+		public Road Road { get; set; }
 
     }
 }

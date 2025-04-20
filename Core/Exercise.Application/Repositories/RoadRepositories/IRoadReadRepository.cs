@@ -9,5 +9,8 @@ namespace Exercise.Application.Repositories.RoadRepositories
 {
 	public interface IRoadReadRepository : IReadRepository<Road>
 	{
+		Task<Road> GetByIdWithStatusAsync(int id, bool tracking = true);
+
+
 	}
 }

@@ -1,4 +1,5 @@
-﻿using Exercise.Application.Repositories.RoadRepositories;
+﻿using Exercise.Application.Abstractions.Hubs;
+using Exercise.Application.Repositories.RoadRepositories;
 using Exercise.Domain.Entities;
 using MediatR;
 using System;
@@ -13,18 +14,22 @@ namespace Exercise.Application.Features.Commands.RoadCommands.UpdateRoad
 	{
 		readonly IRoadReadRepository _roadReadRepository;
 		readonly IRoadWriteRepository _roadWriteRepository;
+		readonly ICarHubService _carHubService;
 
-		public UpdateRoadCommandHandler(IRoadReadRepository roadReadRepository, IRoadWriteRepository roadWriteRepository)
+		public UpdateRoadCommandHandler(IRoadReadRepository roadReadRepository, IRoadWriteRepository roadWriteRepository, ICarHubService carHubService)
 		{
 			_roadReadRepository = roadReadRepository;
 			_roadWriteRepository = roadWriteRepository;
+			_carHubService = carHubService;
 		}
 
 		public async Task<UpdateRoadCommandResponse> Handle(UpdateRoadCommandRequest request, CancellationToken cancellationToken)
 		{
 			Road road = await _roadReadRepository.GetByIdAsync(request.Id);
-			road.Status = request.Status;
+			road.RoadStatusId = request.RoadStatusId;
 			await _roadWriteRepository.SaveAsync();
+			await _carHubService.RoadStatusChangeMessageAsync($"{request.RoadStatusId}");
+
 			return new UpdateRoadCommandResponse
 			{
 				Message = "Yol Durumu Başarıyla Güncellendi",

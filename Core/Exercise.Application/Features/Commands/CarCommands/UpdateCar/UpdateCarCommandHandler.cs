@@ -24,11 +24,9 @@ namespace Exercise.Application.Features.Commands.CarCommands.UpdateCar
         public async Task<UpdateCarCommandResponse> Handle(UpdateCarCommandRequest request, CancellationToken cancellationToken)
         {
             Car car = await _carReadRepository.GetByIdAsync(request.Id);
-            car.Transmission = request.Transmission;
-            car.Color = request.Color;
-            car.CarBrandId = request.CarBrandId;
-            car.EngineType = request.EngineType;
-            car.VehicleIdentitiyNumber = request.VehicleIdentitiyNumber;
+            car.RoadId = request.RoadId;
+            car.VehicleNumber=request.VehicleIdentitiyNumber;
+          
             await _carWriteRepository.SaveAsync();
             return new UpdateCarCommandResponse
             {

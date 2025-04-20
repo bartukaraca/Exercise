@@ -12,9 +12,12 @@ using Exercise.Application.Repositories.CarRepositories;
 using Exercise.Persistence.Repositories.CarRepositories;
 using Exercise.Application.Repositories.RoadRepositories;
 using Exercise.Persistence.Repositories.RoadRepositories;
-using Exercise.Application.Repositories.CarBrandRepositories;
-using Exercise.Persistence.Repositories.CarBrandRepositories;
 using Exercise.Domain.Entities.Identity;
+using Exercise.Application.Abstractions.Services;
+using Exercise.Persistence.Services;
+using Exercise.Application.Abstractions.Services.Authentications;
+using ETicaretAPI.Persistence.Services;
+using Exercise.Application.Services;
 
 namespace Exercise.Persistence
 {
@@ -23,6 +26,7 @@ namespace Exercise.Persistence
 		public static void AddPersistenceServices(this IServiceCollection services)
 		{
 			services.AddDbContext<ExerciseDbContext>(options => options.UseNpgsql(Configuration.ConnectionString));
+			
 			services.AddIdentity<AppUser, AppRole>(options =>
 			{
 				options.Password.RequiredLength = 3;
@@ -33,13 +37,19 @@ namespace Exercise.Persistence
 			})
 			.AddEntityFrameworkStores<ExerciseDbContext>();
 
+			services.AddScoped<IDataService, DataService>();
+			services.AddScoped<IMainService, MainService>();
+
+
 			services.AddScoped<ICarReadRepository, CarReadRepository>();
 			services.AddScoped<ICarWriteRepository, CarWriteRepository>();
 			services.AddScoped<IRoadReadRepository, RoadReadRepository>();
 			services.AddScoped<IRoadWriteRepository, RoadWriteRepository>();
-			services.AddScoped<ICarBrandReadRepository, CarBrandReadRepository>();
-			services.AddScoped<ICarBrandWriteRepository, CarBrandWriteRepository>();
+	
 
+			services.AddScoped<IUserService, UserService>();
+			services.AddScoped<IAuthService, AuthService>();
+			services.AddScoped<IInternalAuthentication, AuthService>();
 		}
 	}
 }

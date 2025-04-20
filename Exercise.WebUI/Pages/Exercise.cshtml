@@ -1,0 +1,32 @@
+﻿@page
+@model Exercise.WebUI.Pages.ExercisesModel
+@{
+    ViewData["Title"] = "Exercises List";
+}
+
+<h2>Exercises</h2>
+
+@if (Model.Exercises.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var exercise in Model.Exercises)
+            {
+                <tr>
+                    <td>@exercise.Id</td>
+                    <td>@exercise.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No exercises found.</p>
+}

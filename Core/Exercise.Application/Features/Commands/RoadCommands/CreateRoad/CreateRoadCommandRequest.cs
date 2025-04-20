@@ -9,6 +9,6 @@ namespace Exercise.Application.Features.Commands.RoadCommands.CreateRoad
 {
 	public class CreateRoadCommandRequest : IRequest<CreateRoadCommandResponse>
 	{
-		public string Status { get; set; }
-	}
+        public int RoadStatusId { get; set; }
+    }
 }

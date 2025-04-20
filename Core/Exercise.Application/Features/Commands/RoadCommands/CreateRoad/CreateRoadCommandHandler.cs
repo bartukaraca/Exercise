@@ -21,7 +21,7 @@ namespace Exercise.Application.Features.Commands.RoadCommands.CreateRoad
 		{
 			await _roadWriteRepository.AddAsync(new()
 			{
-				Status=request.Status,
+			RoadStatusId=request.RoadStatusId,
 			});
 			await _roadWriteRepository.SaveAsync();
 			return new CreateRoadCommandResponse

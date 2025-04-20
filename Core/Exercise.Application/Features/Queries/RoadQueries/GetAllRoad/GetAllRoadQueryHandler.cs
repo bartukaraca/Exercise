@@ -1,6 +1,7 @@
 ﻿using Exercise.Application.Repositories;
 using Exercise.Application.Repositories.RoadRepositories;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace Exercise.Application.Features.Queries.RoadQueries.GetAllRoad
 
 		public async Task<GetAllRoadQueryResponse> Handle(GetAllRoadQueryRequest request, CancellationToken cancellationToken)
 		{
-			var roads = _roadReadRepository.GetAll().ToList();
+			var roads = _roadReadRepository.GetAll().Include(r=>r.RoadStatus).ToList();
 			return new()
 			{
 				Message = "Yollar Başarıyla Getirildi.",

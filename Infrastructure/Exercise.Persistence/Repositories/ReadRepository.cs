@@ -13,7 +13,7 @@ namespace Exercise.Persistence.Repositories
 {
 	public class ReadRepository<T> : IReadRepository<T> where T : BaseEntitiy
 	{
-		private readonly ExerciseDbContext _context;
+		protected readonly ExerciseDbContext _context;
 
 		public ReadRepository(ExerciseDbContext context)
 		{
@@ -48,7 +48,7 @@ namespace Exercise.Persistence.Repositories
 			var query = Table.AsQueryable();
 			if (!tracking)
 				query = Table.AsNoTracking();
-			return await query.FirstOrDefaultAsync(data => data.Id == Guid.Parse(id));
+			return await query.FirstOrDefaultAsync(data => data.Id==int.Parse(id));
 		}
 	}
 }
