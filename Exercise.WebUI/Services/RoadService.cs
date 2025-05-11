@@ -7,13 +7,13 @@ public class RoadService
 
     public RoadService(IHttpClientFactory httpClientFactory)
     {
-        // "ExerciseApi" adında yapılandırdığınız HttpClient'i kullanıyoruz
+      
         _httpClient = httpClientFactory.CreateClient("ExerciseApi");
     }
 
     public async Task<GetAllRoadResponse> GetAllRoadsAsync()
     {
-        var response = await _httpClient.GetAsync("Roads"); // "https://localhost:7277/api/Roads" adresi olacak
+        var response = await _httpClient.GetAsync("Roads"); 
 
         response.EnsureSuccessStatusCode();
 

@@ -6,12 +6,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient("ExerciseApi", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7277/api/"); // ✅ Doğru base adres
+    client.BaseAddress = new Uri("https://localhost:7277/api/"); 
 });
 
 
 builder.Services.AddScoped<ExerciseService>();
 builder.Services.AddScoped<RoadService>();
+builder.Services.AddScoped<CarService>();
+
+
 
 
 
@@ -25,6 +28,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/Roads");
+    return Task.CompletedTask;
+});
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

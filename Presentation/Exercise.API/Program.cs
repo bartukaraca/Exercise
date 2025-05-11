@@ -1,4 +1,3 @@
-
 using Exercise.Application;
 using Exercise.Persistence;
 using Exercise.Infrastructure;
@@ -14,8 +13,6 @@ using Exercise.SignalR.Hubs;
 using Exercise.Application.Abstractions.Services;
 using Exercise.Persistence.Services;
 
-
-
 namespace Exercise.API
 {
     public class Program
@@ -24,10 +21,17 @@ namespace Exercise.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // CORS yapýlandýrmasý - burada hangi kaynaklara izin verileceði belirtilmeli
+            builder.Services.AddCors(options =>
+                options.AddPolicy("AllowLocalhost", policy =>
+                    policy.AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .WithOrigins("https://localhost:7085") // Frontend'inizin URL'si
+                          .AllowCredentials() // Gerekirse credentials (cookie, authorization header vb.) için izin verir
+                )
+            );
 
-            builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
-            policy.AllowAnyHeader().AllowAnyMethod().WithOrigins()));
-
+            // Diðer servisler ekleniyor
             builder.Services.AddPersistenceServices();
             builder.Services.AddControllers();
             builder.Services.AddApplicationServices();
@@ -37,48 +41,48 @@ namespace Exercise.API
             builder.Services.AddSingleton<JsonFileWatcherService>();
             builder.Services.AddHostedService<WatcherHostedService>();
 
-
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            // Swagger yapýlandýrmasý
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // JWT Bearer Authentication yapýlandýrmasý
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer("Admin", options =>
                 {
                     options.TokenValidationParameters = new()
                     {
-                        ValidateAudience = true, //oluþacak token deðerini kimlerin(sitelerin) kullanacaðýný belirleriz. www."".com gibi
-                        ValidateIssuer = true, //oluþacak token deðerini kimin daðýttýðýný ifade eder. www.myapi.com gibi
-                        ValidateLifetime = true,//oluþturulan token deðerinin süresini kontrol eder.
-                        ValidateIssuerSigningKey = true, // oluþacak token deðerinin uygulamaya ait deðerini ifade eder.
-
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
                         ValidAudience = builder.Configuration["Token:Audience"],
                         ValidIssuer = builder.Configuration["Token:Issuer"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Token:SecurityKey"])),
                         LifetimeValidator = (notBefore, expires, securityTokent, validationParameters) => expires != null ? expires > DateTime.UtcNow : false,
                     };
                 });
+
             var app = builder.Build();
 
+            // JSON dosyasý izleme servisini baþlatma
             var fileWatcher = app.Services.GetRequiredService<JsonFileWatcherService>();
             fileWatcher.StartWatching();
 
-            // Configure the HTTP request pipeline.
+            // HTTP pipeline yapýlandýrmasý
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseCors();
-            app.UseHttpsRedirection();
 
+            // CORS, HTTPS yönlendirme, authentication ve authorization ekleniyor
+            app.UseCors("AllowLocalhost"); // Burada "AllowLocalhost" politikasý kullanýlýyor
+            app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
 
-
-            app.MapControllers();
-            app.MapHubs();
+            app.MapControllers(); // API controller'larýný haritalandýr
+            app.MapHubs(); // SignalR hub'larýný haritalandýr
             app.Run();
         }
     }

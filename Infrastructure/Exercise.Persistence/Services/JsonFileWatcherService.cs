@@ -15,7 +15,8 @@ namespace Exercise.Persistence.Services
 
         public JsonFileWatcherService(IServiceProvider serviceProvider)
         {
-            _folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "JsonFiles");
+            // Belirli klasör yolu
+            _folderPath = @"C:\Users\brt_k\Desktop\Bitirme\received_detections";
             _serviceProvider = serviceProvider;
             Directory.CreateDirectory(_folderPath);
         }
@@ -32,7 +33,7 @@ namespace Exercise.Persistence.Services
         {
             try
             {
-                await Task.Delay(100); // Dosyanın tamamlanmasını beklemek
+                await Task.Delay(100); // Dosyanın tamamen yazılmasını beklemek
                 var jsonContent = await File.ReadAllTextAsync(e.FullPath);
                 var roadDto = JsonSerializer.Deserialize<RoadDto>(jsonContent);
 

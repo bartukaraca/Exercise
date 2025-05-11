@@ -1,0 +1,211 @@
+﻿@page
+@model CarModel
+@{
+	ViewData["Title"] = "Araç Listesi";
+	Layout = "_Layout";
+}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+	<div class="container">
+		<a class="navbar-brand d-flex align-items-center gap-2" href="/">
+			<i class="bi bi-traffic-cone-fill fs-4"></i> Trafik Yönetimi
+		</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav ms-auto">
+				<li class="nav-item"><a class="nav-link" href="/Roads">Yollar</a></li>
+				<li class="nav-item"><a class="nav-link active" href="/Car">Araçlar</a></li>
+			</ul>
+		</div>
+	</div>
+</nav>
+
+<div class="container">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h2 class="mb-0">🚗 Araç Listesi</h2>
+		<button id="showFormBtn" class="btn btn-outline-light bg-success text-white shadow-sm">
+			<i class="bi bi-plus-circle me-1"></i> Araç Ekle
+		</button>
+	</div>
+
+	<div id="addCarForm" class="card border-0 shadow-sm mb-4 p-4" style="display:none;">
+		<h5 class="card-title mb-3">Yeni Araç Bilgileri</h5>
+		<form class="row g-3">
+			<div class="col-md-6">
+				<label for="roadId" class="form-label">Yol ID</label>
+				<input type="number" class="form-control" id="roadId" required />
+			</div>
+			<div class="col-md-6">
+				<label for="vehicleIdentityNumber" class="form-label">Araç Kimlik Numarası</label>
+				<input type="text" class="form-control" id="vehicleIdentityNumber" required />
+			</div>
+			<div class="col-12 d-flex gap-2">
+				<button type="submit" class="btn btn-primary shadow-sm">Kaydet</button>
+				<button type="button" class="btn btn-outline-secondary" id="cancelFormBtn">İptal</button>
+			</div>
+		</form>
+	</div>
+
+	@if (Model.Cars != null && Model.Cars.Any())
+	{
+		<table class="table table-bordered table-hover align-middle text-center shadow-sm">
+			<thead class="table-primary">
+				<tr>
+					<th>ID</th>
+					<th>Araç Kimlik No</th>
+					<th>Yol ID</th>
+					<th>İşlemler</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var car in Model.Cars.OrderBy(c => c.VehicleNumber))
+				{
+					<tr id="carRow-@car.Id">
+						<td>@car.Id</td>
+						<td>
+							<span id="vehicleText-@car.Id">@car.VehicleNumber</span>
+							<input type="text" class="form-control d-none" id="vehicleInput-@car.Id" value="@car.VehicleNumber" />
+						</td>
+						<td>
+							<span id="roadText-@car.Id">@car.RoadId</span>
+							<input type="number" class="form-control d-none" id="roadInput-@car.Id" value="@car.RoadId" />
+						</td>
+						<td>
+							<div class="d-flex justify-content-center gap-2">
+								<button class="btn btn-sm btn-outline-secondary" onclick="enableEdit(@car.Id)">
+									<i class="bi bi-pencil-square"></i> Düzenle
+								</button>
+								<button class="btn btn-sm btn-success d-none" id="saveBtn-@car.Id" onclick="saveEdit(@car.Id)">
+									<i class="bi bi-check-circle"></i> Kaydet
+								</button>
+								<form id="deleteForm-@car.Id" method="post" style="display:inline;">
+									<input type="hidden" name="carId" value="@car.Id" />
+									<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteCar(@car.Id)">
+										<i class="bi bi-trash"></i> Sil
+									</button>
+								</form>
+							</div>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+	else
+	{
+		<div class="alert alert-info shadow-sm text-center">Kayıtlı araç bulunmamaktadır.</div>
+	}
+</div>
+
+
+
+<script>
+	// Yeni araç formunu göster/gizle
+	document.getElementById('showFormBtn').addEventListener('click', function () {
+		document.getElementById('addCarForm').style.display = 'block';
+		this.style.display = 'none';
+	});
+
+	document.getElementById('cancelFormBtn').addEventListener('click', function () {
+		document.getElementById('addCarForm').style.display = 'none';
+		document.getElementById('showFormBtn').style.display = 'inline-block';
+	});
+
+	// Yeni araç kaydetme
+	document.querySelector('#addCarForm form').addEventListener('submit', function (e) {
+		e.preventDefault();
+
+		const roadId = document.getElementById('roadId').value;
+		const vehicleIdentityNumber = document.getElementById('vehicleIdentityNumber').value;
+
+		fetch('https://localhost:7277/api/Cars', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				roadId: parseInt(roadId),
+				vehicleIdentitiyNumber: vehicleIdentityNumber
+			})
+		})
+		.then(response => {
+			if (response.ok) {
+				alert('Araç başarıyla eklendi.');
+				location.reload();
+			} else {
+				alert('Araç eklenemedi.');
+			}
+		})
+		.catch(error => {
+			console.error('Hata oluştu:', error);
+			alert('Bir hata oluştu.');
+		});
+	});
+
+	// Araç silme
+	function deleteCar(carId) {
+		if (confirm('Bu aracı silmek istediğinize emin misiniz?')) {
+			fetch(`https://localhost:7277/api/Cars/${carId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			.then(response => {
+				if (response.ok) {
+					location.reload();
+				} else {
+					alert('Araç silinemedi.');
+				}
+			})
+			.catch(error => {
+				console.error('Hata oluştu:', error);
+				alert('Bir hata oluştu.');
+			});
+		}
+	}
+
+	// Düzenleme modunu aç
+	function enableEdit(carId) {
+		document.getElementById(`vehicleText-${carId}`).classList.add('d-none');
+		document.getElementById(`roadText-${carId}`).classList.add('d-none');
+
+		document.getElementById(`vehicleInput-${carId}`).classList.remove('d-none');
+		document.getElementById(`roadInput-${carId}`).classList.remove('d-none');
+
+		document.getElementById(`saveBtn-${carId}`).classList.remove('d-none');
+	}
+
+	// Güncelleme isteği gönder
+	function saveEdit(carId) {
+		const roadId = document.getElementById(`roadInput-${carId}`).value;
+		const vehicleIdentityNumber = document.getElementById(`vehicleInput-${carId}`).value;
+
+		fetch('https://localhost:7277/api/Cars', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			   body: JSON.stringify({
+		id: carId.toString(),
+		roadId: parseInt(roadId),
+		vehicleIdentitiyNumber: vehicleIdentityNumber
+	})
+
+		})
+		.then(response => {
+			if (response.ok) {
+				alert('Araç başarıyla güncellendi.');
+				location.reload();
+			} else {
+				alert('Güncelleme başarısız.');
+			}
+		})
+		.catch(error => {
+			console.error('Hata:', error);
+			alert('Sunucu hatası.');
+		});
+	}
+</script>
