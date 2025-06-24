@@ -38,6 +38,8 @@ namespace Exercise.API
             builder.Services.AddInfrastructureServices();
             builder.Services.AddSignalRServices();
             builder.Services.AddScoped<IRoadService, RoadService>();
+            builder.Services.AddScoped<ICarService, CarService>();
+
             builder.Services.AddSingleton<JsonFileWatcherService>();
             builder.Services.AddHostedService<WatcherHostedService>();
 

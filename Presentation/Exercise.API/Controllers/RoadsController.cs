@@ -45,7 +45,7 @@ namespace Exercise.API.Controllers
 			return StatusCode((int)HttpStatusCode.Created);
 		}
 		[HttpDelete("{Id}")]
-		public async Task<IActionResult> Delete(RemoveRoadCommandRequest removeRoadCommandRequest)
+		public async Task<IActionResult> Delete([FromRoute]RemoveRoadCommandRequest removeRoadCommandRequest)
 		{
 			RemoveRoadCommandResponse response = await _mediatR.Send(removeRoadCommandRequest);
 			return Ok(response);

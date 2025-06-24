@@ -13,7 +13,7 @@ namespace Exercise.Application.DTOs
     public class RoadDto
     {
         public int Id { get; set; }
-        public int RoadStatusId { get; set; }
+        public int RoadStatusId { get; set; } = 99;
 
         [JsonIgnore]
         public DateTime timestamp { get; set; }

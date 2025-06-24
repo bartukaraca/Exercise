@@ -2,78 +2,798 @@
 @model Exercise.WebUI.Pages.RoadsModel
 
 @{
-    ViewData["Title"] = "Yol Listesi";
+    ViewData["Title"] = "Yol Yönetim Sistemi";
     Layout = "_Layout";
 }
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-            <i class="bi bi-traffic-cone-fill fs-4"></i> Trafik Yönetimi
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link active" href="/Roads">Yollar</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Car">Araçlar</a></li>
-            </ul>
+<!-- Modern Navigation -->
+<nav class="modern-nav glass-card">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <i class="fas fa-route"></i>
+            </div>
+            <h1>Yol Yönetimi</h1>
         </div>
+
+        <ul class="nav-links">
+            <li>
+                <a href="/Roads" class="nav-link active">
+                    <i class="fas fa-road"></i>
+                    <span>Yollar</span>
+                </a>
+            </li>
+            <li>
+                <a href="/Car" class="nav-link">
+                    <i class="fas fa-car"></i>
+                    <span>Araçlar</span>
+                </a>
+            </li>
+        </ul>
+
+        <button class="btn-add-road" data-bs-toggle="modal" data-bs-target="#addRoadModal">
+            <i class="fas fa-plus"></i>
+            Yeni Yol
+        </button>
     </div>
 </nav>
 
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">🛣️ Yol Listesi</h2>
+<div class="main-container">
+    <!-- Status Statistics Dashboard -->
+    <div class="statistics-grid">
+        @{
+            var grouped = Model.Roads.GroupBy(r => r.RoadStatus?.Status).ToDictionary(g => g.Key, g => g.Count());
+            var statConfigs = new[] {
+        new { Key = "Yol Stabil", Icon = "fas fa-check-circle", ColorClass = "stat-success" },
+        new { Key = "Kaza", Icon = "fas fa-exclamation-triangle", ColorClass = "stat-danger" },
+        new { Key = "Trafik", Icon = "fas fa-traffic-light", ColorClass = "stat-warning" },
+        new { Key = "Yabancı Cisim", Icon = "fas fa-cube", ColorClass = "stat-info" }
+        };
+        }
+
+        @foreach (var config in statConfigs)
+        {
+            var count = grouped.ContainsKey(config.Key) ? grouped[config.Key] : 0;
+            <div class="stat-card glass-card @config.ColorClass">
+                <div class="stat-content">
+                    <div class="stat-icon">
+                        <i class="@config.Icon"></i>
+                    </div>
+                    <div class="stat-text">
+                        <h3 class="stat-number">@count</h3>
+                        <p class="stat-label">@config.Key</p>
+                    </div>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+            </div>
+        }
     </div>
 
-    @if (Model.Roads.Any())
-    {
-        <table class="table table-bordered table-hover align-middle text-center shadow-sm">
-            <thead class="table-primary">
-                <tr>
-                    <th>Yol ID</th>
-                    <th>Durum</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var road in Model.Roads.OrderBy(r => r.Id))
+    <!-- Düz Yol Haritası -->
+    <div class="map-section glass-card">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-map-marked-alt"></i>
+                Gerçek Zamanlı Yol Haritası
+            </h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot legend-success"></div>
+                    <span>Yol Stabil</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot legend-danger"></div>
+                    <span>Kaza</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot legend-warning"></div>
+                    <span>Trafik</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot legend-info"></div>
+                    <span>Yabancı Cisim</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="road-map-container">
+            <!-- Arkaplan -->
+            <div class="road-background"></div>
+
+            <!-- Ana düz yol -->
+            <div class="straight-road">
+                <!-- Yol orta şeridi -->
+                <div class="road-center-line"></div>
+            </div>
+
+
+
+            <!-- Dinamik Yol Noktaları - RoadId'ye göre sıralı -->
+            @{
+                // Yolları RoadId'ye göre sırala ve maksimum 12 nokta göster
+                var roadList = Model.Roads
+                .OrderBy(r => r.Id)
+                .Take(12)
+                .ToList();
+            }
+
+            @for (int i = 0; i < roadList.Count; i++)
+            {
+                var road = roadList[i];
+                var cssClass = road.RoadStatus?.Status switch
                 {
-                    <tr>
-                        <td>@road.Id</td>
-                        <td>
-                            <span class="badge rounded-pill px-3 py-2 fs-6 @GetStatusClass(road.RoadStatus?.Status)">
-                                @road.RoadStatus?.Status
-                            </span>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="alert alert-info shadow-sm text-center">Kayıtlı yol bulunmamaktadır.</div>
-    }
+                    "Yol Stabil" => "point-success",
+                    "Kaza" => "point-danger",
+                    "Trafik" => "point-warning",
+                    "Yabancı Cisim" => "point-info",
+                    _ => "point-success"
+                };
+
+                // Noktaları eşit aralıklarla yerleştir (8% başlangıç, %7'şer artış)
+                var leftPosition = 8 + (i * 7); // 8%, 15%, 22%, 29%...
+
+                <div class="road-point @cssClass road-point-@i"
+                     style="left: @(leftPosition)%;"
+                     onclick="showRoadDetails(@road.Id, '@(road.RoadStatus?.Status ?? "Bilinmiyor")')"
+                     title="Yol @road.Id - @(road.RoadStatus?.Status ?? "Bilinmiyor")">
+                    @road.Id
+                </div>
+            }
+        </div>
+    </div>
+
 </div>
 
-@section Scripts {
-    <!-- Bootstrap Icons CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-}
+<!-- Road Details Panel -->
+<div id="detailPanel" class="detail-panel">
+    <div class="detail-content glass-card">
+        <div class="detail-header">
+            <h3 id="detailTitle" class="detail-title">Yol Detayları</h3>
+            <button onclick="hideDetails()" class="detail-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="detail-body">
+            <div class="detail-item">
+                <div class="detail-icon detail-icon-info">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="detail-text">
+                    <span class="detail-label">Yol ID</span>
+                    <span id="detailRoadId" class="detail-value">Yükleniyor...</span>
+                </div>
+            </div>
+            <div class="detail-separator"></div>
+            <div class="detail-item">
+                <div class="detail-icon detail-icon-status">
+                    <i class="fas fa-road"></i>
+                </div>
+                <div class="detail-text">
+                    <span class="detail-label">Durum</span>
+                    <span id="detailStatus" class="detail-value">Yükleniyor...</span>
+                </div>
+            </div>
+            <div class="detail-separator"></div>
+            <div class="detail-item">
+                <div class="detail-icon detail-icon-time">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="detail-text">
+                    <span class="detail-label">Oluşturulma Tarihi</span>
+                    <span id="detailCreatedDate" class="detail-value">Yükleniyor...</span>
+                </div>
+            </div>
+            <div class="detail-separator"></div>
+            <div class="detail-item">
+                <div class="detail-icon detail-icon-update">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+                <div class="detail-text">
+                    <span class="detail-label">Son Güncelleme</span>
+                    <span id="detailUpdatedDate" class="detail-value">Yükleniyor...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-@functions {
-    public string GetStatusClass(string status)
-    {
-        return status?.ToLower() switch
-        {
-            "açık" => "bg-success text-white",
-            "kapalı" => "bg-danger text-white",
-            "bakımda" => "bg-warning text-dark",
-            "yoğun" => "bg-secondary text-white",
-            _ => "bg-light text-dark"
-        };
-    }
+<!-- Add Road Modal -->
+<div class="modal fade" id="addRoadModal" tabindex="-1" aria-labelledby="addRoadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modern-modal-header">
+                <h5 class="modern-modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    Yeni Yol Ekle
+                </h5>
+                <button type="button" class="modern-btn-close" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modern-modal-body">
+                <form id="addRoadForm">
+                    <div class="form-group">
+                        <label for="roadStatus" class="form-label">
+                            <i class="fas fa-road"></i>
+                            Yol Durumu
+                        </label>
+                        <select id="roadStatus" class="modern-select" required>
+                            <option value="">Durum seçiniz</option>
+                            <option value="Yol Stabil">Yol Stabil</option>
+                            <option value="Kaza">Kaza</option>
+                            <option value="Trafik">Trafik</option>
+                            <option value="Yabancı Cisim">Yabancı Cisim</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                            İptal
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-check"></i>
+                            Ekle
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const API_BASE = 'https://localhost:7277/api';
+        let connection;
+
+        // Yol detayları fonksiyonu
+        async function showRoadDetails(roadId, initialStatus = null) {
+            console.log('=== ROAD DETAILS DEBUG ===');
+            console.log('Requested roadId:', roadId, 'Type:', typeof roadId);
+
+            const panel = document.getElementById('detailPanel');
+            const title = document.getElementById('detailTitle');
+            const roadIdSpan = document.getElementById('detailRoadId');
+            const statusSpan = document.getElementById('detailStatus');
+            const createdDateSpan = document.getElementById('detailCreatedDate');
+            const updatedDateSpan = document.getElementById('detailUpdatedDate');
+
+            // Panel'i göster
+            panel.classList.add('show');
+            title.textContent = `Yol ${roadId} Detayları`;
+
+            // Hızlı görüntüleme için initial status kullan
+            if (initialStatus) {
+                roadIdSpan.textContent = roadId;
+                statusSpan.textContent = initialStatus;
+                createdDateSpan.textContent = new Date().toLocaleDateString('tr-TR');
+                updatedDateSpan.textContent = new Date().toLocaleString('tr-TR');
+            } else {
+                // Loading state
+                roadIdSpan.innerHTML = `<div class="loading-indicator"><div class="spinner"></div><span>Yükleniyor...</span></div>`;
+                statusSpan.innerHTML = `<div class="loading-indicator"><div class="spinner"></div><span>Yükleniyor...</span></div>`;
+                createdDateSpan.innerHTML = `<div class="loading-indicator"><div class="spinner"></div><span>Yükleniyor...</span></div>`;
+                updatedDateSpan.innerHTML = `<div class="loading-indicator"><div class="spinner"></div><span>Yükleniyor...</span></div>`;
+            }
+
+            // API'den detaylı bilgi al
+            try {
+                console.log('Fetching from:', `${API_BASE}/roads`);
+
+                const response = await fetch(`${API_BASE}/roads`);
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Raw API Response:', data);
+
+                // API response formatını kontrol et
+                let roads = null;
+
+                if (Array.isArray(data)) {
+                    roads = data;
+                } else if (data.road && Array.isArray(data.road)) {
+                    roads = data.road;
+                } else if (data.roads && Array.isArray(data.roads)) {
+                    roads = data.roads;
+                } else if (data.data && Array.isArray(data.data)) {
+                    roads = data.data;
+                } else {
+                    console.error('Unknown data format:', data);
+                    throw new Error('Veri formatı tanınmıyor');
+                }
+
+                console.log('Roads array:', roads);
+
+                // ID eşleştirmesi
+                const road = roads?.find(r => {
+                    return r.id == roadId || r.Id == roadId || r.ID == roadId;
+                });
+
+                console.log('Found road:', road);
+
+                if (road) {
+                    // Detaylı bilgileri güncelle
+                    roadIdSpan.textContent = road.id || road.Id || road.ID || roadId;
+
+                    let status = initialStatus || 'Bilinmiyor';
+                    if (road.roadStatus?.status) {
+                        status = road.roadStatus.status;
+                    } else if (road.RoadStatus?.Status) {
+                        status = road.RoadStatus.Status;
+                    }
+                    statusSpan.textContent = status;
+
+                    // Tarih formatlaması
+                    const formatDate = (dateString) => {
+                        if (!dateString || dateString === 'null' || dateString === null) {
+                            return 'Belirtilmemiş';
+                        }
+                        try {
+                            const date = new Date(dateString);
+                            if (isNaN(date.getTime())) {
+                                return 'Geçersiz tarih';
+                            }
+                            return date.toLocaleString('tr-TR');
+                        } catch (error) {
+                            return 'Geçersiz tarih';
+                        }
+                    };
+
+                    const createdDate = road.createdDate || road.CreatedDate || road.created_date;
+                    const updatedDate = road.updatedDate || road.UpdatedDate || road.updated_date;
+
+                    createdDateSpan.textContent = formatDate(createdDate);
+                    updatedDateSpan.textContent = formatDate(updatedDate);
+                }
+
+            } catch (error) {
+                console.error('=== ERROR IN ROAD DETAILS ===');
+                console.error('Error:', error);
+
+                // Hata durumunda mevcut bilgileri koru
+                if (!initialStatus) {
+                    roadIdSpan.textContent = roadId;
+                    statusSpan.textContent = 'Veri alınamadı';
+                    createdDateSpan.textContent = 'Veri alınamadı';
+                    updatedDateSpan.textContent = 'Veri alınamadı';
+                }
+            }
+        }
+
+        function hideDetails() {
+            document.getElementById('detailPanel').classList.remove('show');
+        }
+
+        // Panel dışına tıklandığında kapat
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('detailPanel');
+            const detailContent = document.querySelector('.detail-content');
+
+            if (panel.classList.contains('show') &&
+                !detailContent.contains(event.target) &&
+                !event.target.classList.contains('road-point')) {
+                hideDetails();
+            }
+        });
+
+        // ESC tuşu ile panel'i kapat
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideDetails();
+            }
+        });
+
+        // Yol ekleme formu
+        document.getElementById('addRoadForm')?.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const statusSelect = document.getElementById('roadStatus');
+            const selectedStatus = statusSelect.value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            if (!selectedStatus) {
+                alert('Lütfen bir durum seçiniz.');
+                return;
+            }
+
+            // Loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ekleniyor...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/roads`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: selectedStatus })
+                });
+
+                if (response.ok) {
+                    // Modal'ı kapat
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addRoadModal'));
+                    modal.hide();
+
+                    // Formu sıfırla
+                    statusSelect.value = '';
+
+                    // Sayfayı yenile
+                    location.reload();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    alert(`Yol eklenirken bir hata oluştu: ${errorData.message || 'Bilinmeyen hata'}`);
+                }
+            } catch (error) {
+                console.error('Yol eklenemedi:', error);
+                alert('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.');
+            } finally {
+                // Button'u eski haline döndür
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Sayfa yüklendiğinde çalışacak kodlar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Düz yol haritası yüklendi - Yollar ID sırasına göre sıralandı!');
+            initializeRealTimeUpdates();
+        });
+
+        // Gerçek zamanlı güncelleme sistemi
+        function initializeRealTimeUpdates() {
+            // İlk veri yüklemesi
+            loadInitialRoadsData();
+
+            // Her 5 saniyede bir güncelleme kontrolü
+            updateInterval = setInterval(checkForUpdates, 5000);
+
+            console.log('Gerçek zamanlı güncelleme sistemi başlatıldı');
+        }
+
+        // İlk yol verilerini yükle
+        async function loadInitialRoadsData() {
+            try {
+                const response = await fetch(`${API_BASE}/roads`);
+                if (response.ok) {
+                    const data = await response.json();
+                    let roads = null;
+
+                    if (Array.isArray(data)) {
+                        roads = data;
+                    } else if (data.road && Array.isArray(data.road)) {
+                        roads = data.road;
+                    } else if (data.roads && Array.isArray(data.roads)) {
+                        roads = data.roads;
+                    } else if (data.data && Array.isArray(data.data)) {
+                        roads = data.data;
+                    }
+
+                    if (roads) {
+                        currentRoadsData = roads.slice().sort((a, b) => (a.id || a.Id || a.ID) - (b.id || b.Id || b.ID));
+                    }
+                }
+            } catch (error) {
+                console.error('İlk veri yüklenirken hata:', error);
+            }
+        }
+
+        // Güncellemeleri kontrol et
+        async function checkForUpdates() {
+            try {
+                const response = await fetch(`${API_BASE}/roads`);
+                if (!response.ok) return;
+
+                const data = await response.json();
+                let roads = null;
+
+                if (Array.isArray(data)) {
+                    roads = data;
+                } else if (data.road && Array.isArray(data.road)) {
+                    roads = data.road;
+                } else if (data.roads && Array.isArray(data.roads)) {
+                    roads = data.roads;
+                } else if (data.data && Array.isArray(data.data)) {
+                    roads = data.data;
+                }
+
+                if (!roads) return;
+
+                const newRoadsData = roads.slice().sort((a, b) => (a.id || a.Id || a.ID) - (b.id || b.Id || b.ID));
+
+                // Değişiklikleri kontrol et
+                const changes = detectChanges(currentRoadsData, newRoadsData);
+
+                if (changes.length > 0) {
+                    // Değişiklikleri uygula
+                    applyUpdates(changes);
+
+                    // Bildirimleri göster
+                    showNotifications(changes);
+
+                    // İstatistikleri güncelle
+                    updateStatistics(newRoadsData);
+
+                    // Mevcut veriyi güncelle
+                    currentRoadsData = newRoadsData;
+                }
+
+            } catch (error) {
+                console.error('Güncelleme kontrolünde hata:', error);
+            }
+        }
+
+        // Değişiklikleri tespit et
+        function detectChanges(oldData, newData) {
+            const changes = [];
+
+            // Yeni eklenen yollar
+            newData.forEach(newRoad => {
+                const roadId = newRoad.id || newRoad.Id || newRoad.ID;
+                const oldRoad = oldData.find(r => (r.id || r.Id || r.ID) === roadId);
+
+                if (!oldRoad) {
+                    changes.push({
+                        type: 'added',
+                        roadId: roadId,
+                        newStatus: newRoad.roadStatus?.status || newRoad.RoadStatus?.Status || 'Bilinmiyor',
+                        road: newRoad
+                    });
+                } else {
+                    // Durum değişikliği kontrolü
+                    const oldStatus = oldRoad.roadStatus?.status || oldRoad.RoadStatus?.Status || 'Bilinmiyor';
+                    const newStatus = newRoad.roadStatus?.status || newRoad.RoadStatus?.Status || 'Bilinmiyor';
+
+                    if (oldStatus !== newStatus) {
+                        changes.push({
+                            type: 'statusChanged',
+                            roadId: roadId,
+                            oldStatus: oldStatus,
+                            newStatus: newStatus,
+                            road: newRoad
+                        });
+                    }
+                }
+            });
+
+            // Silinen yollar
+            oldData.forEach(oldRoad => {
+                const roadId = oldRoad.id || oldRoad.Id || oldRoad.ID;
+                const newRoad = newData.find(r => (r.id || r.Id || r.ID) === roadId);
+
+                if (!newRoad) {
+                    changes.push({
+                        type: 'removed',
+                        roadId: roadId,
+                        oldStatus: oldRoad.roadStatus?.status || oldRoad.RoadStatus?.Status || 'Bilinmiyor'
+                    });
+                }
+            });
+
+            return changes;
+        }
+
+        // Güncellemeleri uygula
+        function applyUpdates(changes) {
+            changes.forEach(change => {
+                const roadPoint = document.querySelector(`.road-point[onclick*="${change.roadId}"]`);
+
+                if (change.type === 'statusChanged' && roadPoint) {
+                    // Eski CSS class'ını kaldır
+                    roadPoint.classList.remove('point-success', 'point-danger', 'point-warning', 'point-info');
+
+                    // Yeni CSS class'ını ekle
+                    const newCssClass = getStatusCssClass(change.newStatus);
+                    roadPoint.classList.add(newCssClass);
+
+                    // Title'ı güncelle
+                    roadPoint.title = `Yol ${change.roadId} - ${change.newStatus}`;
+
+                    // Onclick'i güncelle
+                    roadPoint.setAttribute('onclick', `showRoadDetails(${change.roadId}, '${change.newStatus}')`);
+
+                    // Animasyon efekti ekle
+                    roadPoint.classList.add('road-point-updated');
+                    setTimeout(() => {
+                        roadPoint.classList.remove('road-point-updated');
+                    }, 2000);
+                }
+
+                if (change.type === 'added') {
+                    // Yeni yol eklendi - sayfayı yenile (veya dinamik olarak ekle)
+                    console.log('Yeni yol eklendi, sayfa yenilenecek');
+                    location.reload();
+                }
+
+                if (change.type === 'removed') {
+                    // Yol silindi - sayfayı yenile (veya dinamik olarak kaldır)
+                    console.log('Yol silindi, sayfa yenilenecek');
+                    location.reload();
+                }
+            });
+        }
+
+        // Durum için CSS class'ını döndür
+        function getStatusCssClass(status) {
+            switch (status) {
+                case 'Yol Stabil': return 'point-success';
+                case 'Kaza': return 'point-danger';
+                case 'Trafik': return 'point-warning';
+                case 'Yabancı Cisim': return 'point-info';
+                default: return 'point-success';
+            }
+        }
+
+        // Bildirimleri göster
+        function showNotifications(changes) {
+            changes.forEach(change => {
+                let message = '';
+                let type = 'info';
+
+                switch (change.type) {
+                    case 'statusChanged':
+                        message = `Yol ${change.roadId} durumu "${change.oldStatus}" → "${change.newStatus}" olarak değişti`;
+                        type = getNotificationType(change.newStatus);
+                        break;
+                    case 'added':
+                        message = `Yeni yol eklendi: Yol ${change.roadId} (${change.newStatus})`;
+                        type = 'success';
+                        break;
+                    case 'removed':
+                        message = `Yol ${change.roadId} kaldırıldı`;
+                        type = 'warning';
+                        break;
+                }
+
+                showNotification(message, type);
+            });
+        }
+
+        // Bildirim türünü belirle
+        function getNotificationType(status) {
+            switch (status) {
+                case 'Yol Stabil': return 'success';
+                case 'Kaza': return 'error';
+                case 'Trafik': return 'warning';
+                case 'Yabancı Cisim': return 'object';
+                default: return 'info';
+            }
+        }
+
+        // Bildirim göster
+        function showNotification(message, type = 'info') {
+            // Bildirim container'ını oluştur (eğer yoksa)
+            let notificationContainer = document.getElementById('notification-container');
+            if (!notificationContainer) {
+                notificationContainer = document.createElement('div');
+                notificationContainer.id = 'notification-container';
+                notificationContainer.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000;
+                    max-width: 400px;
+                `;
+                document.body.appendChild(notificationContainer);
+            }
+
+            // Bildirim elementi oluştur
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                background: ${getNotificationColor(type)};
+                color: white;
+                padding: 16px 20px;
+                margin-bottom: 10px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+                position: relative;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                line-height: 1.4;
+                backdrop-filter: blur(10px);
+            `;
+
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="${getNotificationIcon(type)}" style="font-size: 18px;"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()"
+                            style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: auto; padding: 0; line-height: 1;">
+                        ×
+                    </button>
+                </div>
+            `;
+
+            notificationContainer.appendChild(notification);
+
+            // Animasyon ile göster
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // 5 saniye sonra otomatik kaldır
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        // Bildirim rengi
+        function getNotificationColor(type) {
+            switch (type) {
+                case 'success': return 'linear-gradient(135deg, #10B981, #059669)';
+                case 'error': return 'linear-gradient(135deg, #EF4444, #DC2626)';
+                case 'warning': return 'linear-gradient(135deg, #F59E0B, #D97706)';
+                case 'object': return 'linear-gradient(135deg, #3B82F6, #2563EB)';
+                default: return 'linear-gradient(135deg, #6B7280, #4B5563)';
+            }
+        }
+
+        // Bildirim ikonu
+        function getNotificationIcon(type) {
+            switch (type) {
+                case 'success': return 'fas fa-check-circle';
+                case 'error': return 'fas fa-exclamation-triangle';
+                case 'warning': return 'fas fa-exclamation-circle';
+                case 'object': return 'fas fa-info-circle';
+                default: return 'fas fa-bell';
+            }
+        }
+
+        // İstatistikleri güncelle
+        function updateStatistics(roadsData) {
+            const grouped = {};
+            roadsData.forEach(road => {
+                const status = road.roadStatus?.status || road.RoadStatus?.Status || 'Bilinmiyor';
+                grouped[status] = (grouped[status] || 0) + 1;
+            });
+
+            // İstatistik kartlarını güncelle
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach(card => {
+                const label = card.querySelector('.stat-label').textContent;
+                const numberElement = card.querySelector('.stat-number');
+                const count = grouped[label] || 0;
+
+                if (numberElement.textContent !== count.toString()) {
+                    // Sayı değişmişse animasyon ekle
+                    numberElement.style.transform = 'scale(1.2)';
+                    numberElement.style.color = '#3B82F6';
+
+                    setTimeout(() => {
+                        numberElement.textContent = count;
+                        numberElement.style.transform = 'scale(1)';
+                        numberElement.style.color = '';
+                    }, 200);
+                }
+            });
+        }
+
+        // Sayfa kapatılırken interval'ı temizle
+        window.addEventListener('beforeunload', function() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
+
+                
+
+       
+
+
+    </script>
 }

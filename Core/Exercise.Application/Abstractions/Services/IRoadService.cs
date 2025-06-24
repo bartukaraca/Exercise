@@ -9,7 +9,8 @@ namespace Exercise.Application.Abstractions.Services
 {
     public interface IRoadService
     {
-        Task SaveOrUpdateRoadAsync(RoadDto roadDto);
+        Task<RoadDto> SaveOrUpdateRoadAsync(RoadDto roadDto);
+
 
     }
 }

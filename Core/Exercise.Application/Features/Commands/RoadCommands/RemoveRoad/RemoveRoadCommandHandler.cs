@@ -19,7 +19,7 @@ namespace Exercise.Application.Features.Commands.RoadCommands.RemoveRoad
 
 		public async Task<RemoveRoadCommandResponse> Handle(RemoveRoadCommandRequest request, CancellationToken cancellationToken)
 		{
-			await _roadWriteRepository.RemoveAsync(request.Id);
+            await _roadWriteRepository.RemoveAsync(request.Id);
 			await _roadWriteRepository.SaveAsync();
 			return new RemoveRoadCommandResponse
 			{
