@@ -25,7 +25,8 @@ jobs:
         run: dotnet build ./Exercise.sln --configuration Release
 
       - name: Publish
-        run: dotnet publish "C:\Users\brt_k\Desktop\Bar2\Exercise\Presentation\Exercise.API\Exercise.API.csproj" --configuration Release --output "./publish"
+        run: dotnet publish --configuration Release --output "./publish"
+
 
 
       - name: Deployment
