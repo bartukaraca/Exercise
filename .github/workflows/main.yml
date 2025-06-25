@@ -25,7 +25,7 @@ jobs:
         run: dotnet build ./Exercise.sln --configuration Release
 
       - name: Publish
-        run: dotnet publish ./Exercise.sln --configuration Release --no-build
+        run: dotnet publish Exercise.API.csproj --configuration Release --no-build --output '${{ secrets.AZURE_PUBLISH_PROFILE }}'
 
       - name: Deployment
         uses: azure/webapps-deploy@v2
